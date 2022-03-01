@@ -6,11 +6,38 @@ SignVer applies modern deep learning techniques in addressing the task of offlin
 
 ## What Can You do with SignVer?
 
-A list of tasks you can accomplish with the SignVer library:
+Signature verification typically consists of an enrollment phase (assign an identity to a signature) and a verification phase (match a claimed identify to an identify on file, given a signature). In the enrollment phase, SignVer `detector` module can be used to extract signatures from a document, the `cleaner` module can be used to remove noise artifacts and the `extractor` module used to derive a representation that can be stored in an index/database. At verification time, these modules can be reused in obtaining a representation of signatures for claimed identities and the `matcher` module used to verify.
 
-- **Signature Verification Pipelines**: Signature verification typically consists of an enrollment phase (assign an identity to a signature) and a verification phase (match a claimed identify to an identify on file, given a signature). In the enrollment phase, SignVer `detector` module can be used to extract signatures from a document, the `cleaner` module can be used to remove noise artifacts and the `extractor` module used to derive a representation that can be stored in an index/database. At verification time, these modules can be reused in obtaining a representation of signatures for claimed identities and the `matcher` module used to verify.
+The SignVer detector module can also be used to annotate documents as containing signatures, initials, redactions, or hand written dates. Also representations can be extracted for each identified signature. These sort of annotations can useful for tagging images as containing signatures (e.g., have all required parties signed?), if the document is dated, or even signature based retrieval (e.g., retrieve all documents signed by a specific user).
 
-- **Rich Document Tagging**: The SignVer detector module can be used to annotate documents as containing signatures, initials, redactions, or hand written dates. Also representations can be extracted for each identified signature. These sort of annotations can useful for tagging images as containing signatures (e.g., have all required parties signed?), if the document is dated, or even signature based retrieval (e.g., retrieve all documents signed by a specific user).
+### Signature Detection Module
+
+Returns a list of bounding boxes where signatures are located in an image.
+
+```python
+from signver.detector import Detector
+
+detector = Detector()
+detector.load(detector_model_path)
+
+boxes, scores, classes, detections = detector.detect(img_tensor)
+plot_np_array(annotated_image, plot_title="Document and Extracted Signatures")
+
+```
+
+![Signver Signature Detection](https://github.com/victordibia/signver/raw/master/docs/images/localizer.png?raw=true)
+
+### Signature Cleaning Module
+
+Returns a list of cleaned signature images (removal of background lines and text), given a list of signature images
+
+```python
+# Get image crops
+signatures = get_image_crops(img_tensor, boxes, scores,  threshold = 0.22 )
+cleaned_sigs = cleaner.clean(np.array(signatures))
+```
+
+![Signver Signature Detection](https://github.com/victordibia/signver/raw/master/docs/images/cleaned.jpg?raw=true)
 
 ## Contest Contributions
 
@@ -19,13 +46,7 @@ This contest entry makes 3 primary contributions
 - **New Dataset**:. A new curated dataset (named [SignVerOD](https://www.kaggle.com/victordibia/SignVerod)) of 2576 scanned document images with 7103 bounding box annotations, across 4 categories (signature, initials, redaction, handwritten date). The dataset has been made openly available for public use on [Kaggle](https://www.kaggle.com/victordibia/SignVerod) (CCO Public Domain License) to foster research and practice for object detection.
 - **Documentation on Training with Habana Gaudi**: Documentation on how to train two types of computer vision models (object detection and image-to-image translation) with Tensorflow on the Habana Gaudi Platform. All of the documentation and scripts required can be found in the SignVer repository [here](victordibia.com/blog/habana-accelerator/).
 
-- **Introduction to Habana Guadi**: A [introduction and tutorial]() for beginners interested in working with the Habana Gaudi Platform. It focuses on highlighting lessons learned while working on this contest entry.
-
-## Examples of SignVer Modules
-
-## How we built it
-
-## Challenges we ran into
+- **Introduction to Habana Guadi**: A [introduction and tutorial](https://victordibia.com/habana-accelerator/) for beginners interested in working with the Habana Gaudi Platform. It focuses on highlighting lessons learned while working on this contest entry.
 
 ## Accomplishments that we're proud of
 
