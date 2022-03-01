@@ -1,10 +1,10 @@
 # SignVer [Alpha]: A library for Automatic Offline Signature Verification
 
-> SignVer is an experimental library (not under active development) released as part of work on deep learning for offline signature verification. Read [more here](https://blog.fastforwardlabs.com/2021/05/26/deep-learning-for-automatic-offline-signature-verification-an-introduction.html).
+> SignVer is in Alpha and under active development. There may be significant changes ahead.).
 
-![signver logo - a library for automatic signature verification](docs/images/logo.png) 
+![signver logo - a library for automatic signature verification](docs/images/logo.png)
 
-SignVer applies modern deep learning techniques in addressing the task of offline signature verification - 
+SignVer applies modern deep learning techniques in addressing the task of offline signature verification -
 given a pair (or pairs of) signatures, determine if they are produced by the same user (genuine signatures) or different users (potential forgeries). SignVer addresses this task by providing a set of modules that address subtasks required to implement signature verification in real world environments.
 
 ![signver architecture](docs/images/signature_pipeline.png)
@@ -21,12 +21,12 @@ from signver.detector import Detector
 detector = Detector()
 detector.load(detector_model_path)
 
-boxes, scores, classes, detections = detector.detect(img_tensor) 
-plot_np_array(annotated_image, plot_title="Document and Extracted Signatures")  
+boxes, scores, classes, detections = detector.detect(img_tensor)
+plot_np_array(annotated_image, plot_title="Document and Extracted Signatures")
 
 ```
 
-![localizer](docs/images/localizer.png) 
+![localizer](docs/images/localizer.png)
 
 ### Cleaner
 
@@ -39,8 +39,7 @@ cleaned_sigs = cleaner.clean(np.array(signatures))
 
 ```
 
-![cleaner](docs/images/cleaned.jpg) 
-
+![cleaner](docs/images/cleaned.jpg)
 
 ### Extractor
 
@@ -49,14 +48,11 @@ Returns a list of vector representations, given a list of image tensors/np array
 ```python
 from signver.extractor import MetricExtractor
 
-extractor = MetricExtractor() 
+extractor = MetricExtractor()
 extractor.load(extractor_model_path)
 
 features = extractor.extract(signature_list)
 ```
-
-
-
 
 ### Matcher
 
@@ -69,5 +65,3 @@ matcher = Matcher()
 matcher.cosine_distance(feat1,feat2)    # 0.5
 matcher.verify(feat1, feat2)    # False
 ```
- 
-
