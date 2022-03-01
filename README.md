@@ -1,6 +1,6 @@
 # SignVer [Alpha]: A library for Automatic Offline Signature Verification
 
-> SignVer is in Alpha and under active development. There may be significant changes ahead.).
+> SignVer is in Alpha and under active development. There may be significant changes ahead.
 
 ![signver logo - a library for automatic signature verification](docs/images/logo.png)
 
