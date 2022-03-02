@@ -16,6 +16,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 from scipy.spatial.distance import cosine, euclidean, cdist
 import tensorflow as tf
 from habana_frameworks.tensorflow import load_habana_module
+from habana_frameworks.tensorflow.distribute import HPUStrategy
 
 import PIL
 import numpy as np
@@ -24,6 +25,7 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers   
+from mpi4py import MPI
 
 from tqdm import tqdm 
   
@@ -34,8 +36,37 @@ np.random.RandomState(2018)
 random.seed(2018) 
 
 load_habana_module()
+strategy = HPUStrategy()
+
+
 CEDAR_PATH = "signatures" 
 
+BASE_TF_SERVER_PORT = 7850
+DEFAULT_PER_WORKER_BATCHS_SIZE = 32
+DEFAULT_DTYPE = "bf16"
+DEFAULT_NUM_EPOCHS = 6
+SHUFFLE_BUFFER_SIZE = 10000
+
+def set_tf_config():
+    """ Makes a TensorFlow cluster information and sets it to TF_CONFIG environment variable.
+    """
+    tf_config = {
+        "cluster": {
+            "worker": [f"localhost:{BASE_TF_SERVER_PORT + index}" for index in range(num_workers)]
+        },
+        "task": {"type": "worker", "index": worker_index}
+    }
+    tf_config_text = json.dumps(tf_config)
+    os.environ["TF_CONFIG"] = tf_config_text
+    print(f"TF_CONFIG = {tf_config_text}")
+    return tf_config_text
+
+
+num_workers = MPI.COMM_WORLD.Get_size()
+worker_index = MPI.COMM_WORLD.Get_rank()
+if not num_workers > 1:
+    print("warning: Please run this script using mpirun with at least 2 workers.")
+set_tf_config()
 # Utility Functions
 
 def threshold_image(img_arr):
@@ -309,39 +340,39 @@ val_ds = val_ds.prefetch(buffer_size=AUTOTUNE)
 ## Train model 
 
 def get_autoencoder(input_shape=(224,224,3), num_layers = 4, num_filters = 64): 
+  with strategy.scope(): 
+    input = layers.Input(shape=input_shape)
+    x = input
     
-  input = layers.Input(shape=input_shape)
-  x = input
-  
-  # Encoder
-  for i in range(num_layers): 
-    x = layers.Conv2D(num_filters, (3, 3), activation="relu", padding="same")(x)
+    # Encoder
+    for i in range(num_layers): 
+      x = layers.Conv2D(num_filters, (3, 3), activation="relu", padding="same")(x)
+      x = layers.Dropout(0.2)(x)
+      x = layers.Conv2D(num_filters, (3, 3), activation="relu", padding="same")(x)
+      x = layers.MaxPooling2D((2, 2), padding="same")(x) 
+      num_filters = num_filters * 2
+    
     x = layers.Dropout(0.2)(x)
-    x = layers.Conv2D(num_filters, (3, 3), activation="relu", padding="same")(x)
-    x = layers.MaxPooling2D((2, 2), padding="same")(x) 
-    num_filters = num_filters * 2
-  
-  x = layers.Dropout(0.2)(x)
-  
-  # Decoder
-  for i in range(num_layers): 
-    num_filters = num_filters /2
-    x = layers.Conv2DTranspose(num_filters, (3, 3), strides=2, activation="relu", padding="same")(x) 
-     
-  x = layers.Conv2D(3, (3, 3), activation="sigmoid", padding="same")(x) 
-  # Autoencoder
-  autoencoder = Model(input, x, name="autoencoder")
+    
+    # Decoder
+    for i in range(num_layers): 
+      num_filters = num_filters /2
+      x = layers.Conv2DTranspose(num_filters, (3, 3), strides=2, activation="relu", padding="same")(x) 
+      
+    x = layers.Conv2D(3, (3, 3), activation="sigmoid", padding="same")(x) 
+    # Autoencoder
+    autoencoder = Model(input, x, name="autoencoder")
 
-  initial_learning_rate = 0.004
-  # tf.keras.optimizers.Adam(learning_rate=lr_schedule)
-  lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
-    initial_learning_rate,
-    decay_steps=200,
-    decay_rate=0.80,
-    staircase=False)
-  
-  autoencoder.compile(optimizer="adam", loss="binary_crossentropy",metrics=[PSNR, tf.keras.metrics.RootMeanSquaredError(name="rmse"), SSIM])
-  return autoencoder
+    initial_learning_rate = 0.004
+    # tf.keras.optimizers.Adam(learning_rate=lr_schedule)
+    lr_schedule = tf.keras.optimizers.schedules.ExponentialDecay(
+      initial_learning_rate,
+      decay_steps=200,
+      decay_rate=0.80,
+      staircase=False)
+    
+    autoencoder.compile(optimizer="adam", loss="binary_crossentropy",metrics=[PSNR, tf.keras.metrics.RootMeanSquaredError(name="rmse"), SSIM])
+    return autoencoder
 
 ae = get_autoencoder(num_layers=3)
 
