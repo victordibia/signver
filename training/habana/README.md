@@ -90,7 +90,13 @@ unzip cedardataset.zip
 Copy the [`signature_cleaning_habana.py`](signature_cleaning_habana.py) to your habana instance and run the script to train a model on a single Habana Gaudi card.
 
 ```bash
-python3 signature_cleaning_habana.py
+python3 single_clean.py
+```
+
+to run on multiple cards, run the following command which uses `tf.distribute` and `HPUStrategy` to paralellize model training across all 8 available Gaudi cards.
+
+```bash
+python3 distributed_clean.py
 ```
 
 The script trains and exports a model that can then be used with the SignVer library.

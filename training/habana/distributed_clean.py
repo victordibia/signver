@@ -6,6 +6,7 @@ from typing import Tuple
 from PIL import Image, ImageDraw, ImageFont
 import zipfile
 from io import BytesIO
+import json
 
 def warn(*args, **kwargs):
     pass
