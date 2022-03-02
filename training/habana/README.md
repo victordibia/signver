@@ -96,7 +96,7 @@ python3 single_clean.py
 to run on multiple cards, run the following command which uses `tf.distribute` and `HPUStrategy` to paralellize model training across all 8 available Gaudi cards.
 
 ```bash
-python3 distributed_clean.py
+mpirun -np 8 --tag-output --allow-run-as-root python3 -m distributed_clean "$@"
 ```
 
 The script trains and exports a model that can then be used with the SignVer library.
