@@ -25,7 +25,7 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers   
 
-from tqdm.notebook import tqdm 
+from tqdm import tqdm 
   
 from skimage.filters import  threshold_otsu 
 
@@ -34,7 +34,7 @@ np.random.RandomState(2018)
 random.seed(2018) 
 
 load_habana_module()
-CEDAR_PATH = "data/signatures" 
+CEDAR_PATH = "signatures" 
 
 # Utility Functions
 

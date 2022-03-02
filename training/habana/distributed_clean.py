@@ -15,6 +15,7 @@ warnings.filterwarnings("ignore", category=UserWarning)
 
 from scipy.spatial.distance import cosine, euclidean, cdist
 import tensorflow as tf
+from habana_frameworks.tensorflow import load_habana_module
 
 import PIL
 import numpy as np
@@ -24,7 +25,7 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 from tensorflow.keras.models import Model
 from tensorflow.keras import layers   
 
-from tqdm.notebook import tqdm 
+from tqdm import tqdm 
   
 from skimage.filters import  threshold_otsu 
 
@@ -32,7 +33,8 @@ tf.random.set_seed(2018)
 np.random.RandomState(2018)
 random.seed(2018) 
 
-CEDAR_PATH = "data/signatures" 
+load_habana_module()
+CEDAR_PATH = "signatures" 
 
 # Utility Functions
 
