@@ -43,7 +43,7 @@ strategy = HPUStrategy()
 CEDAR_PATH = "signatures" 
 
 BASE_TF_SERVER_PORT = 7850
-DEFAULT_PER_WORKER_BATCHS_SIZE = 32
+DEFAULT_PER_WORKER_BATCHS_SIZE = 64
 DEFAULT_DTYPE = "bf16"
 DEFAULT_NUM_EPOCHS = 6
 SHUFFLE_BUFFER_SIZE = 10000
@@ -320,8 +320,8 @@ for img in tqdm(all_images):
 
 print(f"Processed {len(all_images)} images | {len(train_images)} train ; {len(val_images)} validation" )
 
-batch_size = 32
-train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_images)).shuffle(5, seed=123).repeat(3).batch(batch_size) 
+batch_size = DEFAULT_PER_WORKER_BATCHS_SIZE
+train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_images)).shuffle(5, seed=123).repeat(10).batch(batch_size) 
 val_ds = tf.data.Dataset.from_tensor_slices((val_images, val_images)).batch(batch_size) 
 
 def generate_pair(x):  
