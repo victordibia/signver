@@ -6,3 +6,4 @@ six
 scikit-image
 Pillow 
 kaggle
+ipyparallel

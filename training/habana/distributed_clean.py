@@ -36,6 +36,16 @@ tf.random.set_seed(2018)
 np.random.RandomState(2018)
 random.seed(2018) 
 
+import ipyparallel as ipp
+import os
+os.environ["OMPI_ALLOW_RUN_AS_ROOT"] = "1"
+os.environ["OMPI_ALLOW_RUN_AS_ROOT_CONFIRM"] = "1"
+
+n_hpu=8
+cluster = ipp.Cluster(engines='mpi', n=n_hpu)
+client = cluster.start_and_connect_sync()
+
+
 load_habana_module()
 strategy = HPUStrategy()
 
@@ -47,6 +57,9 @@ DEFAULT_PER_WORKER_BATCHS_SIZE = 64
 DEFAULT_DTYPE = "bf16"
 DEFAULT_NUM_EPOCHS = 6
 SHUFFLE_BUFFER_SIZE = 10000
+
+
+
 
 def set_tf_config():
     """ Makes a TensorFlow cluster information and sets it to TF_CONFIG environment variable.
@@ -321,8 +334,20 @@ for img in tqdm(all_images):
 print(f"Processed {len(all_images)} images | {len(train_images)} train ; {len(val_images)} validation" )
 
 batch_size = DEFAULT_PER_WORKER_BATCHS_SIZE
-train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_images)).shuffle(5, seed=123).repeat(10).batch(batch_size) 
-val_ds = tf.data.Dataset.from_tensor_slices((val_images, val_images)).batch(batch_size) 
+batch_size_per_replica = batch_size
+total_batch_size = batch_size_per_replica * strategy.num_replicas_in_sync
+
+train_ds = tf.data.Dataset.from_tensor_slices((train_images, train_images))
+options = tf.data.Options()
+options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.DATA
+train_dataset = train_ds.with_options(options)
+train_ds = train_ds.shuffle(5, seed=123).repeat(10).batch(total_batch_size) 
+
+val_ds = tf.data.Dataset.from_tensor_slices((val_images, val_images))
+options = tf.data.Options()
+options.experimental_distribute.auto_shard_policy = tf.data.experimental.AutoShardPolicy.OFF
+val_ds = val_ds.with_options(options)
+val_ds = val_ds.batch(total_batch_size) 
 
 def generate_pair(x):  
   clean, aug = get_aug(x.numpy()) 
