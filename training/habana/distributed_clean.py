@@ -35,16 +35,7 @@ from skimage.filters import  threshold_otsu
 tf.random.set_seed(2018) 
 np.random.RandomState(2018)
 random.seed(2018) 
-
-import ipyparallel as ipp
-import os
-os.environ["OMPI_ALLOW_RUN_AS_ROOT"] = "1"
-os.environ["OMPI_ALLOW_RUN_AS_ROOT_CONFIRM"] = "1"
-
-n_hpu=8
-cluster = ipp.Cluster(engines='mpi', n=n_hpu)
-client = cluster.start_and_connect_sync()
-
+ 
 
 load_habana_module()
 strategy = HPUStrategy()
